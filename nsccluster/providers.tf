@@ -32,9 +32,7 @@ locals {
 #  }
 }
 variable "tenancy_ocid" {}
-variable "compartment_ocid" {
-    default = "${var.tenancy_ocid}" != "" ? "${var.tenancy_ocid}" : "${var.tenancy_ocid}"
-}
+variable "compartment_ocid" {}
 variable "user_ocid" {}
 variable "fingerprint" {
     sensitive=true

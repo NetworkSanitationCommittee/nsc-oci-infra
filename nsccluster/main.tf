@@ -1,14 +1,20 @@
+locals {
+# Variables can not reference other variables in their default
+# This allows us to overwrite a compartment_ocid with the tenancy_ocid if the compartment_ocid
+# is not set at all
+    resolved_compartment_id = "${var.compartment_ocid}" != "" ? "${var.compartment_ocid}" : "${var.tenancy_ocid}"
+}
 
 module "network" {
   source   = "git@github.com:catalystsquad/terraform-oci-infra.git//modules/oke-network"
 
-  compartment_id = "${var.compartment_ocid}"
+  compartment_id = "${local.resolved_compartment_ocid}"
 }
 
 module "cluster" {
   source   = "git@github.com:catalystsquad/terraform-oci-infra.git//modules/oke-cluster"
 
-  compartment_id = "${var.compartment_ocid}"
+  compartment_id = "${local.resolved_compartment_ocid}"
   kubernetes_version = "1.24.1"
 
   global_freeform_tags = {
