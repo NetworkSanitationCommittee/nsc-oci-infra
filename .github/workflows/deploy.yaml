@@ -1,0 +1,34 @@
+name: Deploy
+on: # only trigger on prs to main closed
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true # only deploy on merged PRs
+    strategy:
+      matrix:
+        environment:
+          - nsccluster
+    name: Apply ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Splat PEM
+        shell: bash
+        id: splatpem
+        run: |
+          export TMPPEM="$(mktemp)"
+          echo "${{ secrets.OCI_PJNP_PEM }}" >> ${TMPPEM}
+          echo "PEM_PATH=${TMPPEM}" >> ${GITHUB_OUTPUT}
+      - name: Apply
+        uses: catalystsquad/action-terraform@v1
+        with:
+          command: apply
+          work-dir: ${{ matrix.environment }}
+      - name: Cleanup PEM
+        if: always()
+        shell: bash
+        run: |
+          rm -f ${{ steps.splatpem.outputs.PEM_PATH }}
