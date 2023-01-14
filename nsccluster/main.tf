@@ -1,14 +1,14 @@
 
 module "network" {
-  source   = "../modules/oke-network"
+  source   = "git@github.com:catalystsquad/terraform-oci-infra.git//modules/oke-network"
 
-  compartment_id = ${var.compartment_ocid}
+  compartment_id = "${var.compartment_ocid}"
 }
 
 module "cluster" {
-  source   = "../modules/oke-cluster"
+  source   = "git@github.com:catalystsquad/terraform-oci-infra.git//modules/oke-cluster"
 
-  compartment_id = ${var.compartment_ocid}
+  compartment_id = "${var.compartment_ocid}"
   kubernetes_version = "1.24.1"
 
   global_freeform_tags = {
