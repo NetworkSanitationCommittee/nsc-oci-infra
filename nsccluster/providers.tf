@@ -38,7 +38,7 @@ variable "fingerprint" {
   sensitive = true
 }
 variable "private_key_path" {}
-variable "region" {}
+variable "oci_region" {}
 
 provider "oci" {
   tenancy_ocid     = var.tenancy_ocid

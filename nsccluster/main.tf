@@ -2,7 +2,7 @@ locals {
   # Variables can not reference other variables in their default
   # This allows us to overwrite a compartment_ocid with the tenancy_ocid if the compartment_ocid
   # is not set at all
-  resolved_compartment_id = "${var.compartment_ocid}" != "" ? "${var.compartment_ocid}" : "${var.tenancy_ocid}"
+  resolved_compartment_ocid = "${var.compartment_ocid}" != "" ? "${var.compartment_ocid}" : "${var.tenancy_ocid}"
 }
 
 module "network" {
