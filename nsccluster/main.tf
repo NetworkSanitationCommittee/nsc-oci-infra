@@ -6,13 +6,13 @@ locals {
 }
 
 module "network" {
-  source   = "git@github.com:catalystsquad/terraform-oci-infra.git//modules/oke-network"
+  source   = "git::https://github.com/catalystsquad/terraform-oci-infra.git//modules/oke-network"
 
   compartment_id = "${local.resolved_compartment_ocid}"
 }
 
 module "cluster" {
-  source   = "git@github.com:catalystsquad/terraform-oci-infra.git//modules/oke-cluster"
+  source   = "git::https://github.com/catalystsquad/terraform-oci-infra.git//modules/oke-cluster"
 
   compartment_id = "${local.resolved_compartment_ocid}"
   kubernetes_version = "1.24.1"
