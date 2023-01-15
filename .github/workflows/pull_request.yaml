@@ -46,4 +46,4 @@ jobs:
         shell: bash
         run: |
           rm -f ${{ steps.splatpem.outputs.PEM_PATH }}
-          rm -rf ${{ ~/.oci/ }}
+          rm -rf ~/.oci/
