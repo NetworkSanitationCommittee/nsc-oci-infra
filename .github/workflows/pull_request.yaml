@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Setup OCI CLI
         id: ocisetup
+        # This command fails because it is not JSON producing, and the action is dumb
+        continue-on-error: true
         uses: oracle-actions/run-oci-cli-command@v1.1
         with:
           command: 'setup oci-cli-rc'
