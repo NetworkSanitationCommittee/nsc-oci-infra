@@ -11,14 +11,25 @@ jobs:
           - nsccluster
     name: Plan ${{ matrix.environment }}
     runs-on: ubuntu-latest
+    env:
+      OCI_ME: "nonprod@phonejanitor.com"
+      AWS_ACCESS_KEY_ID: ${{ secrets.OCI_TERRFORM_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_TERRAFORM_SECRET_ACCESS_KEY }}
     steps:
+      - name: Setup OCI CLI
+        id: ocisetup
+        uses: oracle-actions/run-oci-cli-command@v1.1
+        with:
+          command: 'setup oci-cli-rc'
       - name: Splat PEM
         shell: bash
         id: splatpem
         run: |
-          export TMPPEM="$(mktemp)"
-          echo "${{ secrets.OCI_PJNP_PEM }}" >> ${TMPPEM}
-          echo "PEM_PATH=${TMPPEM}" >> ${GITHUB_OUTPUT}
+          echo "${{ secrets.OCI_PJNP_PEM }}" >> ~/.oci/auto.pem
+          echo "${{ secrets.OCI_CLI_CONFIG }}" >> ~/.oci/config
+          echo "${{ secrets.OCI_CLI_RC_TAIL }}" > ~/.oci/oci_cli_rc
+          chmod 600 ~/.oci/*
+          echo "PEM_PATH=~/.oci/auto.pem" >> ${GITHUB_OUTPUT}
       - name: Plan
         uses: catalystsquad/action-terraform@v1
         with:
@@ -35,3 +46,4 @@ jobs:
         shell: bash
         run: |
           rm -f ${{ steps.splatpem.outputs.PEM_PATH }}
+          rm -rf ${{ ~/.oci/ }}
