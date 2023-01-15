@@ -18,36 +18,34 @@ terraform {
 }
 
 locals {
-#   kubernetes_provider_command_args = [
-#     "eks", "get-token",
-#     "--region", local.aws_region,
-#     "--cluster-name", module.platform.eks_cluster_id,
-#     "--role-arn", local.aws_provider_assume_role_arn,
-#   ]
+  #   kubernetes_provider_command_args = [
+  #     "eks", "get-token",
+  #     "--region", local.aws_region,
+  #     "--cluster-name", module.platform.eks_cluster_id,
+  #     "--role-arn", local.aws_provider_assume_role_arn,
+  #   ]
 
 
 
-#  global_tags = {
-#    "env" = "nonprod"
-#  }
+  #  global_tags = {
+  #    "env" = "nonprod"
+  #  }
 }
 variable "tenancy_ocid" {}
-variable "compartment_ocid" {
-    default = "${var.tenancy_ocid}"
-}
+variable "compartment_ocid" {}
 variable "user_ocid" {}
 variable "fingerprint" {
-    sensitive=true
+  sensitive = true
 }
 variable "private_key_path" {}
-variable "region" {}
+variable "oci_region" {}
 
 provider "oci" {
-   tenancy_ocid = "${var.tenancy_ocid}"
-   user_ocid = "${var.user_ocid}"
-   fingerprint = "${var.fingerprint}"
-   private_key_path = "${var.private_key_path}"
-   region = "${var.oci_region}"
+  tenancy_ocid     = var.tenancy_ocid
+  user_ocid        = var.user_ocid
+  fingerprint      = var.fingerprint
+  private_key_path = var.private_key_path
+  region           = var.oci_region
 }
 
 
