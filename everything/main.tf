@@ -62,8 +62,6 @@ module "bootstrap" {
   version = "~> 1.0"
 
   enable_platform_services          = true
-  prometheus_remote_write_username  = local.environment_name
-  prometheus_remote_write_password  = local.secrets.prometheusRemoteWritePassword
   cert_manager_cloudflare_api_token = local.secrets.cloudflareApiToken
   argo_cd_chart_version             = "4.9.12"
 
@@ -84,7 +82,6 @@ module "bootstrap" {
     "grafanaDatasourceCortexPassword" : local.secrets.grafanaDatasourceCortexPassword,
     "grafanaDatasourceLokiPassword" : local.secrets.grafanaDatasourceLokiPassword,
     "grafanaAdminPassword" : local.secrets.grafanaAdminPassword,
-    "grafanaOktaClientSecret" : local.secrets.grafanaOktaClientSecret,
     "grafanaNotifierProductEngineeringTeams" : local.secrets.grafanaNotifierProductEngineeringTeams,
     "grafanaNotifierCatalystSquadSlack" : local.secrets.grafanaNotifierCatalystSquadSlack,
     "promtailBasicAuthPassword" : local.secrets.promtailBasicAuthPassword,
