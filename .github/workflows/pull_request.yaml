@@ -46,7 +46,7 @@ jobs:
         continue-on-error: true
         uses: oracle-actions/run-oci-cli-command@v1.1
         with:
-          command: 'ce cluster create-kubeconfig --cluster-id ${CLUSTER_OCID}'
+          command: '-d ce cluster create-kubeconfig --cluster-id ${CLUSTER_OCID}'
       - name: Plan
         uses: catalystsquad/action-terraform@v1
         with:
@@ -59,7 +59,7 @@ jobs:
           TF_VAR_fingerprint: ${{ secrets.OCI_PJNP_FINGERPRINT }}
           TF_VAR_private_key_path: ${{ steps.splatpem.outputs.PEM_PATH }}
           TF_VAR_oci_region: ${{ secrets.OCI_PJNP_REGION }}
-          TF_VAR_platform_secret_ocid: ${PLATFORM_SECRET_OCID}
+          TF_VAR_platform_secret_ocid: "${PLATFORM_SECRET_OCID}"
           TF_VAR_dns_zone_name: "zenithswarm.com"
       - name: Cleanup PEM
         if: always()

@@ -7,6 +7,8 @@ variable "fingerprint" {
 }
 variable "private_key_path" {}
 variable "oci_region" {}
-variable "platform_secret_ocid" {}
+variable "platform_secret_ocid" {
+  type = string
+}
 variable "dns_zone_name" {}
 
