@@ -9,7 +9,7 @@ jobs:
       matrix:
         environment:
           - everything
-    name: Plan ${{ matrix.environment }}
+    name: Plan for ${{ matrix.environment }}
     runs-on: ubuntu-latest
     env:
       OCI_ME: "nonprod@phonejanitor.com"
@@ -46,7 +46,7 @@ jobs:
         continue-on-error: true
         uses: oracle-actions/run-oci-cli-command@v1.1
         with:
-          command: 'oci ce cluster create-kubeconfig --cluster-id ${CLUSTER_OCID}'
+          command: 'ce cluster create-kubeconfig --cluster-id ${CLUSTER_OCID}'
       - name: Plan
         uses: catalystsquad/action-terraform@v1
         with:
