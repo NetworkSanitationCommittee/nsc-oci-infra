@@ -35,7 +35,7 @@ jobs:
           chmod 600 ~/.oci/*
           echo "PEM_PATH=~/.oci/auto.pem" >> ${GITHUB_OUTPUT}
       - name: Setup Kubeconfig
-        id: ocisetup
+        id: ocikubeconfig
         # This command fails because it is not JSON producing, and the action is dumb
         continue-on-error: true
         uses: oracle-actions/run-oci-cli-command@v1.1
