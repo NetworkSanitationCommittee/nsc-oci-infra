@@ -1,0 +1,45 @@
+grafana:
+  enabled: false
+# disable monitoring of kube-controller-manager, kube-proxy, kube-scheduler,
+# because they are managed by the cloud vendor
+defaultRules:
+  rules:
+    kubeProxy: false
+    kubeScheduler: false
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeScheduler:
+  enabled: false
+prometheus:
+  prometheusSpec:
+    retention: 10d
+    retentionSize: "18GB" # 90% of max storage
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: encrypted-gp2
+          resources:
+            requests:
+              storage: 20Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1.5Gi
+      limits:
+        cpu: 500m
+        memory: 1.5Gi
+    # allow service monitors to be selected from all namespaces and labels
+    serviceMonitorSelectorNilUsesHelmValues: false
+    externalLabels:
+      cluster: ${clusterName}
+    remoteWrite:
+      - url: http://cortex-nginx.cortex.svc.cluster.local/api/v1/push
+        basicAuth:
+          username:
+            name: prometheus-remote-write-basic-auth
+            key: username
+          password: 
+            name: prometheus-remote-write-basic-auth
+            key: password

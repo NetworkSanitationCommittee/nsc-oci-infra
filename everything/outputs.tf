@@ -9,3 +9,5 @@ output "cluster_pub_endpoint" {
 output "oke_image_id" {
   value = module.cluster.oke_image_id
 }
+
+

@@ -1,0 +1,77 @@
+configs: 
+  repositories:
+    nsc-helm: 
+      name: "Network Sanitation Committee Github Helm Repository"
+      type: "helm"
+      url: "https://raw.githubusercontent.com/NetworkSanitationCommittee/charts/main"
+      #username: ${helmRepoPat}
+      #password: ${helmRepoPat}
+
+controller:
+  logLevel: error
+  args:
+    appResyncPeriod: "30"
+  extraArgs:
+    - --app-state-cache-expiration=1s
+    - --default-cache-expiration=1s
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  resources:
+    requests:
+      cpu: 300m
+      memory: 750Mi
+
+dex:
+  # disable dex for now because we don't do authentication to argocd at all
+  enabled: false
+
+redis:
+  metrics:
+    enabled: true
+    image:
+      # specify docker registry because the quay default doesn't work
+      repository: bitnami/redis-exporter
+    serviceMonitor:
+      enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+server:
+  logLevel: error
+  config:
+    timeout.reconciliation: 30s
+  extraArgs:
+    - --app-state-cache-expiration=1s
+    - --default-cache-expiration=1s
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+repoServer:
+  logLevel: error
+  extraArgs:
+    - --repo-cache-expiration=1s
+    - --default-cache-expiration=1s
+    - --revision-cache-expiration=1s
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  resources:
+    requests:
+      cpu: 300m
+      memory: 750Mi
+
+applicationSet:
+  # disable the applicationSet controller because we don't use it and it ends
+  # up in a crashloop due to cache syncing timeouts
+  enabled: false

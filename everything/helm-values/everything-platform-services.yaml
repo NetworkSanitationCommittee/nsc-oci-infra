@@ -1,0 +1,448 @@
+certManager:
+  clusterIssuer:
+    acme:
+      email: support@phonejanitor.com
+    solvers:
+      - dns01:
+          cloudflare:
+            email: tod@phonejanitor.com
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
+  wildcardCert:
+    everythingName: zenithswarm.com
+    dnsNames:
+      - 'zenithswarm.com'
+      - '*.zenithswarm.com'
+    organizations:
+      - Network Sanitation Committee
+      - PhoneJanitor
+clusterAutoscaler:
+  enabled: true
+  values:
+    awsRegion: us-phoenix-1
+    autoDiscovery:
+      clusterName: everything
+    extraArgs:
+      balance-similar-node-groups: true
+      skip-nodes-with-local-storage: false
+contour:
+  values:
+    envoy:
+      service:
+        annotations: 
+          service.beta.kubernetes.io/aws-load-balancer-type: nlb
+cortex:
+  enabled: true
+  basicAuthSecret:
+    htpasswd: |
+      grafana:$2y$17$7Su4aN2amhinkHUXdITFIuTijsIJl1O9Jb/KjKO5MZEtSvCOio4lm
+      everything:$2y$17$w7F9EEACBVzX5Qt56PtM..4i8zFtdXTzTvEDB.Z0QNSV42XmaksM2
+  values:
+    ingress:
+      annotations:
+        projectcontour.io/tls-cert-namespace: cert-manager
+      hosts:
+        - host: metrics.zenithswarm.com
+          paths:
+            - /
+      tls:
+        - secretName: wildcard-certificate
+          hosts:
+            - metrics.zenithswarm.com 
+    config:
+      blocks_storage:
+        backend: s3
+        s3:
+          bucket_name: nsc-metrics-bucket
+          endpoint: axgi7clmxnue.compat.objectstorage.us-phoenix-1.oraclecloud.com
+      ruler_storage:
+        backend: s3
+        s3:
+          bucket_name: nsc-metrics-bucket
+          endpoint: axgi7clmxnue.compat.objectstorage.us-phoenix-1.oraclecloud.com
+      alertmanager_storage:
+        backend: s3
+        s3: 
+          bucket_name: nsc-metrics-bucket
+          endpoint: axgi7clmxnue.compat.objectstorage.us-phoenix-1.oraclecloud.com
+    alertmanager:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
+    distributor:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 100Mi
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 6
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
+    ingester:
+      resources:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+      autoscaling:
+        enabled: true
+        minReplicas: 3
+        maxReplicas: 9
+        targetMemoryUtilizationPercentage: 80
+      persistentVolume:
+        size: 20Gi
+    ruler:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
+    querier:
+      resources: 
+        requests:
+          cpu: 100m
+          memory: 500Mi
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 6
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
+    query_frontend:
+      replicas: 2
+      resources:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+    nginx:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 6
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
+    store_gateway:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 250Mi
+      persistentVolume:
+        size: 20Gi
+    compactor:
+      enabled: true
+      replicas: 1
+      serviceMonitor:
+        enabled: true
+      resources:
+        requests:
+          cpu: 100m
+          memory: 500Mi
+      persistentVolume:
+        size: 20Gi
+    memcached-blocks-index:
+      replicaCount: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      extraEnv:
+        - name: MEMCACHED_CACHE_SIZE
+          value: "256"
+        - name: MEMCACHED_MAX_CONNECTIONS
+          value: "1024"
+        - name: MEMCACHED_THREADS
+          value: "4"
+    memcached-blocks:
+      replicaCount: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      extraEnv:
+        - name: MEMCACHED_CACHE_SIZE
+          value: "256"
+        - name: MEMCACHED_MAX_CONNECTIONS
+          value: "1024"
+        - name: MEMCACHED_THREADS
+          value: "4"
+    memcached-blocks-metadata:
+      replicaCount: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      extraEnv:
+        - name: MEMCACHED_CACHE_SIZE
+          value: "256"
+        - name: MEMCACHED_MAX_CONNECTIONS
+          value: "1024"
+        - name: MEMCACHED_THREADS
+          value: "4"
+externalDns:
+  values:
+    provider: cloudflare
+    cloudflare:
+      proxied: true
+      email: tod@phonejanitor.com
+      apiToken: ${cloudflareApiToken}
+    sources:
+      - contour-httpproxy
+      - ingress
+grafana:
+  enabled: true
+  datasourceAuth:
+    cortex:
+      password: ${grafanaDatasourceCortexPassword}
+    loki:
+      password: ${grafanaDatasourceLokiPassword}
+  extraDatasources:
+    - name: Everything Prometheus
+      type: prometheus
+      uid: everything-prometheus
+      url:  http://kube-prometheus-stack-prometheus.kube-prometheus-stack:9090/
+      access: proxy
+      isDefault: false
+  values:
+    adminPassword: ${grafanaAdminPassword}
+    serviceAccount:
+      create: true
+      name: grafana
+    grafana.ini:
+      server:
+        root_url: https://grafana.zenithswarm.com
+    alerting:
+      contactpoints.yaml:
+        apiVersion: 1
+        contactPoints:
+        - orgId: 1
+          name: engineering
+          receivers:
+          - uid: catalyst-squad-slack
+            type: slack
+            settings:
+              url: ${grafanaNotifierCatalystSquadSlack}
+              title: |
+                {{`{{ template "custom_slack_title" . }}`}}
+              text: |
+                {{`{{ template "custom_slack_text" . }}`}}
+          - uid: product-engineering-teams
+            type: teams
+            settings:
+              url: ${grafanaNotifierProductEngineeringTeams}
+              title: |
+                {{`{{ template "default.title" . }}`}}
+              message: |
+                {{`{{ template "default.message" . }}`}}
+      notification-policies.yaml:
+        apiVersion: 1
+        policies:
+        - receiver: engineering
+          group_by: ['alertname']
+          matchers: []
+          mute_time_intervals: []
+          group_wait: 60s
+          group_interval: 5m
+          repeat_interval: 24h
+      notifier-templates.yaml:
+        apiVersion: 1
+        templates:
+          - name: custom_slack_title
+            template: |
+              {{`[{{- .Status | toUpper -}}{{- if eq .Status "firing" }} x {{ .Alerts.Firing | len -}}{{- end }}] | {{ .EverythingLabels.alertname -}}`}}
+          - name: custom_slack_text
+            template: |
+              {{`{{- range .Alerts }}`}}
+              {{`*Status*: {{ .Status }}`}}
+              {{`{{- if gt (len .Annotations) 0 }}`}}
+              {{`*Description*: {{ .Annotations.description }}`}}
+              {{`{{- end }}`}}
+              {{`*Labels*: {{ range .Labels.SortedPairs }}`}} `{{`{{ .Name }}: {{ .Value }}`}}` {{`{{ end }}`}}
+              {{`{{- "\n\n" -}}`}}
+              {{`{{- end }}`}}
+    ingress:
+      annotations:
+        projectcontour.io/tls-cert-namespace: cert-manager
+      hosts:
+        - grafana.zenithswarm.com
+      tls:
+        - secretName: wildcard-certificate
+          hosts:
+            - grafana.zenithswarm.com 
+    resources:
+      requests:
+        cpu: 100m
+        memory: 250Mi
+linkerd:
+  values:
+    installNamespace: false
+    identityTrustAnchorsPEM: |
+      -----BEGIN CERTIFICATE-----
+      MIIBoDCCAUWgAwIBAgIUMGjZHFjP22f97Fldx/A903gkw1wwCgYIKoZIzj0EAwIw
+      JTEjMCEGA1UEAwwacm9vdC5saW5rZXJkLmNsdXN0ZXIubG9jYWwwHhcNMjMwMTE5
+      MjIzMDQ0WhcNMjQwMTE5MjIzMDQ0WjAlMSMwIQYDVQQDDBpyb290LmxpbmtlcmQu
+      Y2x1c3Rlci5sb2NhbDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABBi2D2LJehFS
+      ytfxscxA9bZKIUDSX4daNS6uNNiKfhJFiYSQWS7OY3iElA/guOWc+MIhfL1TuXVm
+      JmEH0XS9HNOjUzBRMB0GA1UdDgQWBBSIe0AvdiSD6xI0Q5wboBITTweELDAfBgNV
+      HSMEGDAWgBSIe0AvdiSD6xI0Q5wboBITTweELDAPBgNVHRMBAf8EBTADAQH/MAoG
+      CCqGSM49BAMCA0kAMEYCIQC+4u7YNXp+hKllPyDFAHsvkYqf6Dgfj6UGuJU2GUq0
+      pwIhALMrUKVGTbHIA3Dtgncfp3ur+1OJmx/yJ6rNAff+RTQV
+      -----END CERTIFICATE-----
+    identity:
+      issuer:
+        tls:
+          crtPEM: |
+            -----BEGIN CERTIFICATE-----
+            MIIBozCCAUmgAwIBAgIUfUbvmXqvkNgWr5DUWASoX+g7fJ8wCgYIKoZIzj0EAwIw
+            JTEjMCEGA1UEAwwacm9vdC5saW5rZXJkLmNsdXN0ZXIubG9jYWwwHhcNMjMwMTE5
+            MjIzMDQ0WhcNMjMwNzE4MjIzMDQ0WjApMScwJQYDVQQDDB5pZGVudGl0eS5saW5r
+            ZXJkLmNsdXN0ZXIubG9jYWwwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARQb0qP
+            yfeAv7/HDREKFJ30lKuu/BbSyNcfEJdF0c0QIgOqfer+JCzjdz0+huya5jUIFQ6G
+            MoKx23l876rY7yaQo1MwUTAdBgNVHQ4EFgQUtCtPh6MqPamlgWI2qWecv45oWiIw
+            HwYDVR0jBBgwFoAUiHtAL3Ykg+sSNEOcG6ASE08HhCwwDwYDVR0TAQH/BAUwAwEB
+            /zAKBggqhkjOPQQDAgNIADBFAiBWtI5A6ifZ0foNWxKpTbHiYLY36rfY3HNxpgbR
+            qLXMdgIhAKJ4vBD5JNYZ2drRYcGYoUFiIoGB/GYsh5yxK1A+kNVn
+            -----END CERTIFICATE-----
+          keyPEM: |
+            ${linkerdIssuerKeyPEM}
+loki:
+  enabled: true
+  basicAuthSecret:
+    htpasswd: |
+      grafana:$2y$17$7Su4aN2amhinkHUXdITFIuTijsIJl1O9Jb/KjKO5MZEtSvCOio4lm
+      everything:$2y$17$w7F9EEACBVzX5Qt56PtM..4i8zFtdXTzTvEDB.Z0QNSV42XmaksM2
+  values:
+    loki:
+      structuredConfig:
+        storage_config:
+          aws:
+            s3: s3://axgi7clmxnue.compat.objectstorage.us-phoenix-1.oraclecloud.com
+            bucketnames: nsc-metrics-bucket
+    gateway:
+      ingress:
+        annotations:
+          projectcontour.io/tls-cert-namespace: cert-manager
+        hosts:
+          - host: logs.zenithswarm.com
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: wildcard-certificate
+            hosts:
+              - logs.zenithswarm.com 
+      autoscaling:
+        enabled: true
+        minReplicas: 1
+        maxReplicas: 3
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
+      resources:
+        requests:
+          cpu: 50m
+          memory: 50Mi
+    ingester:
+      replicas: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 500Mi
+    distributor:
+      autoscaling:
+        enabled: true
+        minReplicas: 1
+        maxReplicas: 3
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
+      resources:
+        requests:
+          cpu: 250m
+          memory: 100Mi
+    querier:
+      autoscaling:
+        enabled: true
+        minReplicas: 1
+        maxReplicas: 3
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
+      resources:
+        requests:
+          cpu: 100m
+          memory: 150Mi
+    queryFrontend:
+      autoscaling:
+        enabled: true
+        minReplicas: 1
+        maxReplicas: 3
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
+      resources:
+        requests:
+          cpu: 50m
+          memory: 50Mi
+    compactor:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+    ruler:
+      enabled: false
+    indexGateway:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 250Mi
+metricsServer:
+  values:
+    extraArgs:
+      - --kubelet-insecure-tls=true
+      - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+prometheusBlackboxExporter:
+  enabled: false
+promtail:
+  enabled: true
+  values:
+    config:
+      lokiAddress: http://loki-distributed-gateway.loki/loki/api/v1/push
+      snippets:
+        extraClientConfigs: |
+          external_labels:
+            cluster: everything
+          basic_auth:
+            username: everything
+            password: ${promtailBasicAuthPassword}
+sentry:
+  enabled: true
+  values:
+    global:
+      postgresql:
+        postgresqlPassword: ${sentryPostgresqlPassword}
+        postgresqlPostgresPassword: ${sentryPostgresqlPassword}
+    user:
+      password: ${sentryUserPassword}
+    ingress:
+      enabled: true
+      hostname: sentry.zenithswarm.com
+      tls:
+        - secretName: wildcard-certificate
+          hosts:
+            - sentry.zenithswarm.com
+    redis:
+      auth:
+        password: ${sentryRedisAuthPassword}
+    system:
+      url: 'https://sentry.zenithswarm.com'
+      secretKey: ${sentrySystemSecretKey}
+storageClasses:
+  aws:
+    gp2:
+      enabled: true
+    encryptedGp2:
+      enabled: true
+velero:
+  enabled: false

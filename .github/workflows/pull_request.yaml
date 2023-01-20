@@ -8,8 +8,12 @@ jobs:
     strategy:
       matrix:
         environment:
-          - nsccluster
-    name: Plan ${{ matrix.environment }}
+          - everything
+        cluster_ocid:
+          - "ocid1.cluster.oc1.phx.aaaaaaaa7avw4ej27n6uxmvfmfhhlzvnwlgtno6yum3fx2t2rc7fv6q6klra"
+        platform_secret_ocid:
+          - "ocid1.vaultsecret.oc1.phx.amaaaaaawh4wkdqazjyodsouhr23ehzkngljwwq226j42evi2w7fioanxk6a"
+    name: Plan for ${{ matrix.environment }}
     runs-on: ubuntu-latest
     env:
       OCI_ME: "nonprod@phonejanitor.com"
@@ -32,6 +36,19 @@ jobs:
           echo "${{ secrets.OCI_CLI_RC_TAIL }}" > ~/.oci/oci_cli_rc
           chmod 600 ~/.oci/*
           echo "PEM_PATH=~/.oci/auto.pem" >> ${GITHUB_OUTPUT}
+      - name: Init Kubeconfig
+        shell: bash
+        id: initkubeconfig
+        run: |
+          mkdir -p ~/.kube/
+          touch ~/.kube/config
+      - name: Setup Kubeconfig
+        id: ocikubeconfig
+        # This command fails because it is not JSON producing, and the action is dumb
+        continue-on-error: true
+        uses: oracle-actions/run-oci-cli-command@v1.1
+        with:
+          command: 'ce cluster create-kubeconfig --cluster-id ${{ matrix.cluster_ocid }}'
       - name: Plan
         uses: catalystsquad/action-terraform@v1
         with:
@@ -44,6 +61,8 @@ jobs:
           TF_VAR_fingerprint: ${{ secrets.OCI_PJNP_FINGERPRINT }}
           TF_VAR_private_key_path: ${{ steps.splatpem.outputs.PEM_PATH }}
           TF_VAR_oci_region: ${{ secrets.OCI_PJNP_REGION }}
+          TF_VAR_platform_secret_ocid: "${{ matrix.platform_secret_ocid }}"
+          TF_VAR_dns_zone_name: "zenithswarm.com"
       - name: Cleanup PEM
         if: always()
         shell: bash
