@@ -61,10 +61,11 @@ module "bootstrap" {
   source  = "catalystsquad/catalyst-cluster-bootstrap/kubernetes"
   version = "~> 1.0"
 
-  enable_platform_services         = true
-  prometheus_remote_write_username = local.environment_name
-  prometheus_remote_write_password = local.secrets.prometheusRemoteWritePassword
-  argo_cd_chart_version            = "4.9.12"
+  enable_platform_services          = true
+  prometheus_remote_write_username  = local.environment_name
+  prometheus_remote_write_password  = local.secrets.prometheusRemoteWritePassword
+  cert_manager_cloudflare_api_token = local.secrets.cloudflareApiToken
+  argo_cd_chart_version             = "4.9.12"
 
   kube_prometheus_stack_values = [
     templatefile("./helm-values/prometheus.yaml", {
