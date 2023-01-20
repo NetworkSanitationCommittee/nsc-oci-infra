@@ -34,6 +34,12 @@ jobs:
           echo "${{ secrets.OCI_CLI_RC_TAIL }}" > ~/.oci/oci_cli_rc
           chmod 600 ~/.oci/*
           echo "PEM_PATH=~/.oci/auto.pem" >> ${GITHUB_OUTPUT}
+      - name: Init Kubeconfig
+        shell: bash
+        id: initkubeconfig
+        run: |
+          mkdir -p ~/.kube/
+          touch ~/.kube/config
       - name: Setup Kubeconfig
         id: ocikubeconfig
         # This command fails because it is not JSON producing, and the action is dumb
