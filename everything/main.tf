@@ -73,7 +73,8 @@ module "bootstrap" {
 
   argo_cd_values = [
     templatefile("./helm-values/argocd.yaml", {
-      "helmRepoPat" : local.secrets.helmRepoPat,
+      #"helmRepoPat" : local.secrets.helmRepoPat,
+      "helmRepoPat" : "NotRealPAT",
     })
   ]
 
