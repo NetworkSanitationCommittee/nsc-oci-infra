@@ -6,31 +6,23 @@ terraform {
       source  = "hashicorp/oci"
       version = ">= 4.0.0"
     }
-    # kubernetes = {
-    #   source  = "hashicorp/kubernetes"
-    #   version = "~> 2.0"
-    # }
-    # tls = {
-    #   source  = "hashicorp/tls"
-    #   version = "~> 3.0"
-    # }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "~> 1.14.0"
+    }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 3.0"
+    }
   }
 }
 
+
 locals {
-  #   kubernetes_provider_command_args = [
-  #     "eks", "get-token",
-  #     "--region", local.aws_region,
-  #     "--cluster-name", module.platform.eks_cluster_id,
-  #     "--role-arn", local.aws_provider_assume_role_arn,
-  #   ]
-
-
-
-  #  global_tags = {
-  #    "env" = "nonprod"
-  #  }
-}
 variable "tenancy_ocid" {}
 variable "compartment_ocid" {}
 variable "user_ocid" {}
@@ -39,6 +31,20 @@ variable "fingerprint" {
 }
 variable "private_key_path" {}
 variable "oci_region" {}
+variable "platform_secret_ocid" {}
+variable "dns_zone_name"
+ariable "tenancy_ocid" {}
+variable "compartment_ocid" {}
+variable "user_ocid" {}
+variable "fingerprint" {
+  sensitive = true
+}
+variable "private_key_path" {}
+variable "oci_region" {}
+variable "platform_secret_ocid" {}
+variable "dns_zone_name"
+  kube_config_path = "~/.kube/config"
+}
 
 provider "oci" {
   tenancy_ocid     = var.tenancy_ocid
@@ -48,6 +54,13 @@ provider "oci" {
   region           = var.oci_region
 }
 
+provider "kubernetes" {
+  config_path = local.kube_config_path
+}
+
+provider "kubectl" {
+  config_path = local.kube_config_path
+}
 
 # provider "kubernetes" {
 #   # overwrite config_path to ensure existing kubeconfig does not get used
