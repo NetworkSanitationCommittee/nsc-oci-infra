@@ -1,11 +1,11 @@
 configs: 
   repositories:
-    matthews-helm: 
+    nsc-helm: 
       name: "Network Sanitation Committee Github Helm Repository"
       type: "helm"
       url: "https://raw.githubusercontent.com/NetworkSanitationCommittee/charts/main"
-      username: ${helmRepoPat}
-      password: ${helmRepoPat}
+      #username: ${helmRepoPat}
+      #password: ${helmRepoPat}
 
 controller:
   logLevel: error
