@@ -36,7 +36,7 @@ module "cluster" {
 resource "oci_objectstorage_bucket" "metrics-bucket" {
   compartment_id = local.resolved_compartment_ocid
   name           = "nsc-metrics-bucket"
-  namespace      = "nsc"
+  namespace      = "axgi7clmxnue"
 }
 
 locals {
