@@ -14,9 +14,9 @@ terraform {
       source  = "gavinbunney/kubectl"
       version = "~> 1.14.0"
     }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 3.0"
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.0"
     }
   }
 }
@@ -40,6 +40,12 @@ provider "kubernetes" {
 
 provider "kubectl" {
   config_path = local.kube_config_path
+}
+
+provider "helm" {
+  kubernetes {
+    config_path = local.kube_config_path
+  }
 }
 
 # provider "kubernetes" {
