@@ -4,8 +4,8 @@ configs:
       name: "Network Sanitation Committee Github Helm Repository"
       type: "helm"
       url: "https://raw.githubusercontent.com/NetworkSanitationCommittee/charts/main"
-      #username: ${helmRepoPat}
-      #password: ${helmRepoPat}
+      username: "${helmRepoPat}"
+      password: "${helmRepoPat}"
 
 controller:
   logLevel: error
@@ -37,8 +37,8 @@ redis:
       enabled: true
   resources:
     requests:
-      cpu: 10m
-      memory: 64Mi
+      cpu: 100m
+      memory: 500Mi
 
 server:
   logLevel: error
@@ -53,8 +53,8 @@ server:
       enabled: true
   resources:
     requests:
-      cpu: 10m
-      memory: 64Mi
+      cpu: 100m
+      memory: 500Mi
 
 repoServer:
   logLevel: error
@@ -70,7 +70,6 @@ repoServer:
     requests:
       cpu: 300m
       memory: 750Mi
-
 applicationSet:
   # disable the applicationSet controller because we don't use it and it ends
   # up in a crashloop due to cache syncing timeouts

@@ -18,8 +18,10 @@ certManager:
       - Network Sanitation Committee
       - PhoneJanitor
 clusterAutoscaler:
-  enabled: true
+  # Weirdness exists with Oracle, disable for now.
+  enabled: false
   values:
+    cloudProvider: oci-oke
     awsRegion: us-phoenix-1
     autoDiscovery:
       clusterName: everything
@@ -54,19 +56,32 @@ cortex:
       blocks_storage:
         backend: s3
         s3:
-          bucket_name: nsc-metrics-bucket
+          bucket_name: ${metricsBucketName}
           endpoint: axgi7clmxnue.compat.objectstorage.us-phoenix-1.oraclecloud.com
       ruler_storage:
         backend: s3
         s3:
-          bucket_name: nsc-metrics-bucket
+          bucket_name: ${metricsBucketName}
           endpoint: axgi7clmxnue.compat.objectstorage.us-phoenix-1.oraclecloud.com
       alertmanager_storage:
         backend: s3
         s3: 
-          bucket_name: nsc-metrics-bucket
+          bucket_name: ${metricsBucketName}
           endpoint: axgi7clmxnue.compat.objectstorage.us-phoenix-1.oraclecloud.com
     alertmanager:
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: access_key_id
+              optional: false 
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: secret_access_key
+              optional: false
       resources:
         requests:
           cpu: 10m
@@ -74,7 +89,7 @@ cortex:
     distributor:
       resources:
         requests:
-          cpu: 200m
+          cpu: 10m
           memory: 100Mi
       autoscaling:
         enabled: true
@@ -85,7 +100,7 @@ cortex:
     ingester:
       resources:
         requests:
-          cpu: 500m
+          cpu: 10m
           memory: 2Gi
       autoscaling:
         enabled: true
@@ -95,14 +110,40 @@ cortex:
       persistentVolume:
         size: 20Gi
     ruler:
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: access_key_id
+              optional: false 
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: secret_access_key
+              optional: false
       resources:
         requests:
           cpu: 10m
           memory: 50Mi
     querier:
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: access_key_id
+              optional: false 
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: secret_access_key
+              optional: false
       resources: 
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 500Mi
       autoscaling:
         enabled: true
@@ -114,12 +155,12 @@ cortex:
       replicas: 2
       resources:
         requests:
-          cpu: 50m
+          cpu: 10m
           memory: 100Mi
     nginx:
       resources:
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 100Mi
       autoscaling:
         enabled: true
@@ -128,9 +169,22 @@ cortex:
         targetCPUUtilizationPercentage: 80
         targetMemoryUtilizationPercentage: 80
     store_gateway:
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: access_key_id
+              optional: false 
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: secret_access_key
+              optional: false
       resources:
         requests:
-          cpu: 50m
+          cpu: 10m
           memory: 250Mi
       persistentVolume:
         size: 20Gi
@@ -141,7 +195,7 @@ cortex:
         enabled: true
       resources:
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 500Mi
       persistentVolume:
         size: 20Gi
@@ -149,7 +203,7 @@ cortex:
       replicaCount: 2
       resources:
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 256Mi
       extraEnv:
         - name: MEMCACHED_CACHE_SIZE
@@ -162,7 +216,7 @@ cortex:
       replicaCount: 2
       resources:
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 256Mi
       extraEnv:
         - name: MEMCACHED_CACHE_SIZE
@@ -175,7 +229,7 @@ cortex:
       replicaCount: 2
       resources:
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 256Mi
       extraEnv:
         - name: MEMCACHED_CACHE_SIZE
@@ -190,17 +244,18 @@ externalDns:
     cloudflare:
       proxied: true
       email: tod@phonejanitor.com
-      apiToken: ${cloudflareApiToken}
+      apiToken: "${cloudflareApiToken}"
     sources:
       - contour-httpproxy
       - ingress
 grafana:
   enabled: true
+  targetRevision: "~6.45.0"
   datasourceAuth:
     cortex:
-      password: ${grafanaDatasourceCortexPassword}
+      password: "${grafanaDatasourceCortexPassword}"
     loki:
-      password: ${grafanaDatasourceLokiPassword}
+      password: "${grafanaDatasourceLokiPassword}"
   extraDatasources:
     - name: Everything Prometheus
       type: prometheus
@@ -209,7 +264,7 @@ grafana:
       access: proxy
       isDefault: false
   values:
-    adminPassword: ${grafanaAdminPassword}
+    adminPassword: "${grafanaAdminPassword}"
     serviceAccount:
       create: true
       name: grafana
@@ -226,7 +281,7 @@ grafana:
           - uid: catalyst-squad-slack
             type: slack
             settings:
-              url: ${grafanaNotifierCatalystSquadSlack}
+              url: "${grafanaNotifierCatalystSquadSlack}"
               title: |
                 {{`{{ template "custom_slack_title" . }}`}}
               text: |
@@ -234,7 +289,7 @@ grafana:
           - uid: product-engineering-teams
             type: teams
             settings:
-              url: ${grafanaNotifierProductEngineeringTeams}
+              url: "${grafanaNotifierProductEngineeringTeams}"
               title: |
                 {{`{{ template "default.title" . }}`}}
               message: |
@@ -276,7 +331,7 @@ grafana:
             - grafana.zenithswarm.com 
     resources:
       requests:
-        cpu: 100m
+        cpu: 10m
         memory: 250Mi
 linkerd:
   values:
@@ -311,6 +366,7 @@ linkerd:
           keyPEM: |
             ${linkerdIssuerKeyPEM}
 loki:
+  targetRevision: "~0.66.8"
   enabled: true
   basicAuthSecret:
     htpasswd: |
@@ -322,7 +378,7 @@ loki:
         storage_config:
           aws:
             s3: s3://axgi7clmxnue.compat.objectstorage.us-phoenix-1.oraclecloud.com
-            bucketnames: nsc-metrics-bucket
+            bucketnames: ${metricsBucketName}
     gateway:
       ingress:
         annotations:
@@ -337,65 +393,92 @@ loki:
             hosts:
               - logs.zenithswarm.com 
       autoscaling:
-        enabled: true
+        enabled: false
         minReplicas: 1
         maxReplicas: 3
         targetCPUUtilizationPercentage: 80
         targetMemoryUtilizationPercentage: 80
       resources:
         requests:
-          cpu: 50m
+          cpu: 10m
           memory: 50Mi
     ingester:
-      replicas: 2
+      extraEnv:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: access_key_id
+              optional: false 
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: secret_access_key
+              optional: false
+      replicas: 1
+      maxUnavailable: 1
       resources:
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 500Mi
     distributor:
       autoscaling:
-        enabled: true
+        enabled: false
         minReplicas: 1
         maxReplicas: 3
         targetCPUUtilizationPercentage: 80
         targetMemoryUtilizationPercentage: 80
       resources:
         requests:
-          cpu: 250m
+          cpu: 10m
           memory: 100Mi
     querier:
+      extraEnv:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: access_key_id
+              optional: false 
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metricsbucketaccess
+              key: secret_access_key
+              optional: false
       autoscaling:
-        enabled: true
+        enabled: false
         minReplicas: 1
         maxReplicas: 3
         targetCPUUtilizationPercentage: 80
         targetMemoryUtilizationPercentage: 80
       resources:
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 150Mi
     queryFrontend:
       autoscaling:
-        enabled: true
+        enabled: false
         minReplicas: 1
         maxReplicas: 3
         targetCPUUtilizationPercentage: 80
         targetMemoryUtilizationPercentage: 80
       resources:
         requests:
-          cpu: 50m
+          cpu: 10m
           memory: 50Mi
     compactor:
       resources:
         requests:
-          cpu: 100m
+          cpu: 10m
           memory: 100Mi
     ruler:
       enabled: false
     indexGateway:
       resources:
         requests:
-          cpu: 50m
+          cpu: 10m
           memory: 250Mi
 metricsServer:
   values:
@@ -405,6 +488,7 @@ metricsServer:
 prometheusBlackboxExporter:
   enabled: false
 promtail:
+  targetRevision: "~6.7.0"
   enabled: true
   values:
     config:
@@ -415,16 +499,17 @@ promtail:
             cluster: everything
           basic_auth:
             username: everything
-            password: ${promtailBasicAuthPassword}
+            password: "${promtailBasicAuthPassword}"
 sentry:
-  enabled: true
+  enabled: false
+  targetRevision: "~17.0.0"
   values:
     global:
       postgresql:
-        postgresqlPassword: ${sentryPostgresqlPassword}
-        postgresqlPostgresPassword: ${sentryPostgresqlPassword}
+        postgresqlPassword: "${sentryPostgresqlPassword}"
+        postgresqlPostgresPassword: "${sentryPostgresqlPassword}"
     user:
-      password: ${sentryUserPassword}
+      password: "${sentryUserPassword}"
     ingress:
       enabled: true
       hostname: sentry.zenithswarm.com
@@ -434,15 +519,25 @@ sentry:
             - sentry.zenithswarm.com
     redis:
       auth:
-        password: ${sentryRedisAuthPassword}
+        password: "${sentryRedisAuthPassword}"
     system:
       url: 'https://sentry.zenithswarm.com'
-      secretKey: ${sentrySystemSecretKey}
+      secretKey: "${sentrySystemSecretKey}"
 storageClasses:
   aws:
     gp2:
-      enabled: true
+      enabled: false
     encryptedGp2:
+      enabled: false
+  gke:
+    ssd:
+      enabled: false
+    standard:
+      enabled: false
+  oke:
+    bvEncrypted:
+      name: oci-bv-enc
       enabled: true
+      isDefaultStorageClass: true
 velero:
   enabled: false
