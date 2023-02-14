@@ -36,6 +36,7 @@ contour:
           service.beta.kubernetes.io/aws-load-balancer-type: nlb
 cortex:
   enabled: true
+  targetRevision: "~2.0.1"
   basicAuthSecret:
     htpasswd: |
       grafana:$2y$17$7Su4aN2amhinkHUXdITFIuTijsIJl1O9Jb/KjKO5MZEtSvCOio4lm
@@ -334,6 +335,7 @@ grafana:
         cpu: 10m
         memory: 250Mi
 linkerd:
+  targetRevision: "~2.12.3"
   values:
     installNamespace: false
     identityTrustAnchorsPEM: |
