@@ -17,7 +17,7 @@ locals {
 }
 
 module "total_cluster" {
-  source = "git::https://github.com/catalystsquad/terraform-oci-infra.git/modules/oke-everything"
+  source = "git::https://github.com/catalystsquad/terraform-oci-infra.git//modules/oke-everything"
 
   compartment_ocid = var.compartment_ocid
   node_ocpus       = 1
