@@ -13,7 +13,7 @@ jobs:
         environment:
           - everything
         cluster_ocid:
-          - "ocid1.cluster.oc1.phx.aaaaaaaahlvoqdacxowd54wed66mykwoolnjiqj7vtlvveawicjfgnxlkkna"
+          - "ocid1.cluster.oc1.phx.aaaaaaaahuf6llgq7rcuulwssfjqhc353agi5a77zounicpqic7abwosekjq"
         platform_secret_ocid:
           - "ocid1.vaultsecret.oc1.phx.amaaaaaawh4wkdqazjyodsouhr23ehzkngljwwq226j42evi2w7fioanxk6a"
     name: Apply ${{ matrix.environment }}
