@@ -26,7 +26,7 @@ module "total_cluster" {
 
 module "bootstrap" {
   count      = 1
-  depends_on = [module.cluster, kubernetes_storage_class.platform_storage_class_paravirtualized]
+  depends_on = [module.total_cluster]
   source     = "catalystsquad/catalyst-cluster-bootstrap/kubernetes"
   version    = "~> 1.0"
 
@@ -49,8 +49,8 @@ module "bootstrap" {
 
   platform_services_values = templatefile("./helm-values/${local.environment_name}-platform-services.yaml", {
     "metricsBucketName" : "${var.infra_set_name}_catalyst_metrics_bucket"
-    "metricsAwsAccessKeyId" : oci_identity_customer_secret_key.platform_metrics_bucket_user_key.id,
-    "metricsAwsSecretAccessKey" : oci_identity_customer_secret_key.platform_metrics_bucket_user_key.key,
+    "metricsAwsAccessKeyId" : module.total_cluster.metrics_bucket_user_key_id,
+    "metricsAwsSecretAccessKey" : module.total_cluster.metrics_bucket_user_access_key,
     "cloudflareApiToken" : local.secrets.cloudflareApiToken,
     "grafanaDatasourceCortexPassword" : local.secrets.grafanaDatasourceCortexPassword,
     "grafanaDatasourceLokiPassword" : local.secrets.grafanaDatasourceLokiPassword,
@@ -66,6 +66,8 @@ module "bootstrap" {
     # decode base64 then use the indent function to ensure it is properly
     # formatted in yaml
     "linkerdIssuerKeyPEM" : indent(12, base64decode(local.secrets.linkerdIssuerKeyPEMb64)),
+    "ecrAccessKeyId" : local.secrets.ecrAccessKeyId,
+    "ecrSecretAccessKey" : local.secrets.ecrSecretAccessKey,
   })
 }
 

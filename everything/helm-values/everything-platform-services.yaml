@@ -543,3 +543,12 @@ storageClasses:
       isDefaultStorageClass: true
 velero:
   enabled: false
+awsEcrCreds:
+  enabled: true
+  values:
+    region: us-west-2
+    account: 758073318405
+    accessKeyId: "${ecrAccessKeyId}"
+    secretAccessKey: "${ecrSecretAccessKey}"
+zalandoPostgresOperator:
+  enabled: true
